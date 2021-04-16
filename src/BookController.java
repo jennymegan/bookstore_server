@@ -20,10 +20,14 @@ public class BookController
         if(isNewBook(dbEntry)){
             if(areNewBookDetailsIncluded(dbEntry)){
                 Book bookToAdd = bs.createNewBook(dbEntry);
-                if(bs.addNewBookToDb(bookToAdd)){
-                    return "Book added - " + bookToAdd.printInfo();
+                if(bs.checkNotDuplicateISBN(bookToAdd)){
+                    if(bs.addNewBookToDb(bookToAdd)){
+                        return "Book added - " + bookToAdd.printInfo();
+                    } else {
+                        return "Book failed to add to database.";
+                    }
                 } else {
-                    return "Book failed to add to database.";
+                    return "Book with this ISBN already in database.";
                 }
             } else {
                 return "Addition to database should have six fields. For a field with more than one word, separate words with underscores, like_this.";

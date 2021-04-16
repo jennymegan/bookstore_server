@@ -30,10 +30,11 @@ public class BookService {
         return cleanedDetails;
     }
 
+    //checks whether a book with this ISBN already exists
     public boolean checkNotDuplicateISBN(Book book){
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            String select = "SELECT * FROM online_bookstore.book WHERE isbn LIKE '" + book.getIsbn() + "';";
+            String select = "SELECT * FROM online_bookstore.book WHERE BOOK_isbn LIKE '" + book.getIsbn() + "';";
             ResultSet rs = statement.executeQuery(select);
 
             if (!rs.isBeforeFirst() ) {
@@ -46,26 +47,20 @@ public class BookService {
         return false;
     }
 
-
     //Add a Book object to the database
     public boolean addNewBookToDb(Book book) {
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            if(checkNotDuplicateISBN(book)) {
-                String insert = "INSERT INTO `online_bookstore`.`book`" +
-                        "(`book_ISBN`," +
-                        "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
-                        "VALUES" +
-                        "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
-                        "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
-                statement.execute(insert);
-                return true;
-            } else {
 
-                //return a message here.. this messes with my lovely boolean
+            String insert = "INSERT INTO `online_bookstore`.`book`" +
+                    "(`book_ISBN`," +
+                    "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
+                    "VALUES" +
+                    "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
+                    "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
+            statement.execute(insert);
+            return true;
 
-
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
