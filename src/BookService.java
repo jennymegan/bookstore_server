@@ -1,34 +1,71 @@
 import java.sql.ResultSet;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BookService {
 
     //Create a new book object from a list of data and return it
     public Book createNewBook(List<String> bookDetails) {
-        String book_ISBN = bookDetails.get(1);
-        String book_author = bookDetails.get(2);
-        String book_publisher = bookDetails.get(3);
-        String book_title = bookDetails.get(4);
-        String book_language = bookDetails.get(5);
-        String book_price_gbp = bookDetails.get(6);
+        List<String> cleanBookDetails = cleanUnderscores(bookDetails);
+        String book_ISBN = cleanBookDetails.get(1);
+        String book_author = cleanBookDetails.get(2);
+        String book_publisher = cleanBookDetails.get(3);
+        String book_title = cleanBookDetails.get(4);
+        String book_language = cleanBookDetails.get(5);
+        String book_price_gbp = cleanBookDetails.get(6);
         return new Book(Double.parseDouble(book_ISBN), book_author, book_publisher, book_title, book_language, Double.parseDouble(book_price_gbp));
     }
+
+    private List<String> cleanUnderscores(List<String> bookDetails){
+        List<String> cleanedDetails = new ArrayList<String>();
+        for (String detail : bookDetails){
+            if(detail.contains("_")){
+                cleanedDetails.add(detail.replaceAll("_", " "));
+            } else {
+                cleanedDetails.add(detail);
+            }
+        }
+        System.out.println(cleanedDetails.toString());
+        return cleanedDetails;
+    }
+
+    public boolean checkNotDuplicateISBN(Book book){
+        try {
+            Statement statement = BookstoreDBConnector.connect().createStatement();
+            String select = "SELECT * FROM online_bookstore.book WHERE isbn LIKE '" + book.getIsbn() + "';";
+            ResultSet rs = statement.executeQuery(select);
+
+            if (!rs.isBeforeFirst() ) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     //Add a Book object to the database
     public boolean addNewBookToDb(Book book) {
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
+            if(checkNotDuplicateISBN(book)) {
+                String insert = "INSERT INTO `online_bookstore`.`book`" +
+                        "(`book_ISBN`," +
+                        "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
+                        "VALUES" +
+                        "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
+                        "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
+                statement.execute(insert);
+                return true;
+            } else {
 
-            String insert = "INSERT INTO `online_bookstore`.`book`" +
-                    "(`book_ISBN`," +
-                    "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
-                    "VALUES" +
-                    "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
-                    "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
-            statement.execute(insert);
-            return true;
+                //return a message here.. this messes with my lovely boolean
 
+
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
