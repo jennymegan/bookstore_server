@@ -1,65 +1,63 @@
-import java.sql.ResultSet;
-import java.sql.*;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
-public class BookController {
-
-    //Create a new book object from a list of data and return it
-    public Book createNewBook(List<String> bookDetails) {
-        String book_ISBN = bookDetails.get(1);
-        String book_author = bookDetails.get(2);
-        String book_publisher = bookDetails.get(3);
-        String book_title = bookDetails.get(4);
-        String book_language = bookDetails.get(5);
-        String book_price_gbp = bookDetails.get(6);
-        return new Book(Double.parseDouble(book_ISBN), book_author, book_publisher, book_title, book_language, Double.parseDouble(book_price_gbp));
+public class BookController 
+{
+    private final BookService bs;
+    
+    public BookController() {
+        this.bs = new BookService();
     }
 
-    //Add a Book object to the database
-    public boolean addNewBookToDb(Book book) {
-        try {
-            Statement statement = BookstoreDBConnector.connect().createStatement();
+    public String handleInput(Scanner in){
 
-            String insert = "INSERT INTO `online_bookstore`.`book`" +
-                    "(`book_ISBN`," +
-                    "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
-                    "VALUES" +
-                    "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
-                    "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
-            statement.execute(insert);
+        String input = in.nextLine();
+        String[] data = input.split(" ");
+        List<String> dbEntry = Arrays.asList(data);
+
+        //check if it's an addition to the database & if so, add it and return info to client
+        if(isNewBook(dbEntry)){
+            Book bookToAdd = bs.createNewBook(dbEntry);
+            if(bs.addNewBookToDb(bookToAdd)){
+                return "Book added - " + bookToAdd.printInfo();
+            } else {
+                return "Book failed to add to database.";
+            }
+
+            //check if it's a search query, if so search and return info to client
+        } else if (isSearch(dbEntry)){
+            Book foundBook = bs.searchBookTitle(dbEntry);
+            if (foundBook.getIsbn() == null)
+            {
+                return "No book found with a title like that.";
+            } else {
+                return "Book found - " + foundBook.printInfo();
+            }
+
+            //if the format is not correct, let client know
+        } else {
+            return "Please try again, following the format requested.";
+        }
+    }
+
+    //check if the data provided matches the pattern for creating a new Book object
+    private boolean isNewBook(List<String> dbEntry){
+        if(dbEntry.size() == 7 &&
+                dbEntry.get(0).equalsIgnoreCase("add")
+        ){
             return true;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return false;
     }
 
-    //Search for a title in the book table in database based on list of data
-    public Book searchBookTitle(List<String> bookDetails) {
-        try {
-            Statement statement = BookstoreDBConnector.connect().createStatement();
-            String bookName = bookDetails.get(1);
-            String select = "SELECT * FROM online_bookstore.book WHERE book_title LIKE '%" + bookName + "%';";
-            ResultSet rs = statement.executeQuery(select);
-            Book foundBook = new Book();
-
-            while (rs.next()) {
-                foundBook.setIsbn(Double.parseDouble(rs.getString("book_ISBN")));
-                foundBook.setAuthor(rs.getString("book_author"));
-                foundBook.setPublisher(rs.getString("book_publisher"));
-                foundBook.setTitle(rs.getString("book_title"));
-                foundBook.setLanguage(rs.getString("book_language"));
-                foundBook.setPrice(Double.parseDouble(rs.getString("book_price_gbp")));
-                return foundBook;
-
-                }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-
-            }
-            return new Book();
+    //check if the data provided matches pattern for searching book titles
+    private boolean isSearch(List<String> dbEntry){
+        if(dbEntry.size() == 2 &&
+                dbEntry.get(0).equalsIgnoreCase("search")
+        ){
+            return true;
         }
-
+        return false;
+    }
 }
