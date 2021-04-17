@@ -1,7 +1,5 @@
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class BookService {
@@ -18,10 +16,10 @@ public class BookService {
     }
 
     //checks whether a book with this ISBN already exists in database
-    public boolean checkNotDuplicateISBN(Book book){
+    public boolean checkNotDuplicateISBN(String isbn){
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            String select = "SELECT * FROM online_bookstore.book WHERE BOOK_isbn LIKE '" + book.getIsbn() + "';";
+            String select = "SELECT * FROM online_bookstore.book WHERE BOOK_isbn LIKE '" + isbn + "';";
             ResultSet rs = statement.executeQuery(select);
 
             if (!rs.isBeforeFirst() ) {

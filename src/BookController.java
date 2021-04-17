@@ -5,18 +5,25 @@ import java.util.Scanner;
 
 public class BookController 
 {
+    //holds its own bookservice object to communicate with database
     private final BookService bs;
     
     public BookController() {
         this.bs = new BookService();
     }
 
+    //takes client input and directs it to relevant method based on query type
     public String handleInput(Scanner in) {
 
+        //take client input and split into a list
         String input = in.nextLine();
         String[] data = input.split(" ");
         List<String> dbEntryRaw = Arrays.asList(data);
+
+        //clean out any underscores in terms
         List<String> dbEntry = cleanUnderscores(dbEntryRaw);
+
+        //retrieve query type requested & direct it
         String type = dbEntry.get(0).toLowerCase();
 
         switch (type) {
@@ -33,12 +40,12 @@ public class BookController
         return "Please try again, entering your query type as the first word.";
     }
 
-
+    //handle adding item to database - run through various validations before handing to service
     public String handleAdd( List<String> dbEntry) {
-        if (areNewBookDetailsIncluded(dbEntry)) {
+        if (correctNumTermsIncluded(dbEntry)) {
             Book bookToAdd = bs.createNewBook(dbEntry);
-            if (bs.checkNotDuplicateISBN(bookToAdd)) {
-                if (checkOnlyDigitsISBN(bookToAdd)) {
+            if (bs.checkNotDuplicateISBN(bookToAdd.getIsbn())) {
+                if (checkOnlyDigitsISBN(bookToAdd.getIsbn())) {
                     if (checkOnlyDigitsPrice(bookToAdd)) {
                         if (bs.addNewBookToDb(bookToAdd)) {
                             return "Book added - " + bookToAdd.printInfo();
@@ -59,41 +66,55 @@ public class BookController
         }
     }
 
+    //handle search in database - run through validation to check they have entered title correctly
     public String handleSearch(List<String> dbEntry) {
-        if(isSearchListTooLong(dbEntry)){
-            return "For a book name with more than one word, separate words with underscores, like_this.";
-        } else {
+        if(correctNumTermsIncluded(dbEntry)){
             Book foundBook = bs.searchBookTitle(dbEntry);
             if (foundBook.getIsbn() == null) {
                 return "No book found with a title like that.";
             } else {
                 return "Book found - " + foundBook.printInfo();
             }
+        } else {
+            return "For a book name with more than one word, separate words with underscores, like_this.";
         }
-
     }
 
-
+    //handle updating an item in db based on client restricted params
     public String handleUpdate(List<String> dbEntry) {
-       //validate length?
-        String field = dbEntry.get(1);
-        if (bs.updateBook(dbEntry)) {
-            return "Book updated!";
-        } else {
-            return "Book with a " + field + " like that not updated";
-        }
+       if(correctNumTermsIncluded(dbEntry)){
+           String field = dbEntry.get(1);
+           if (bs.updateBook(dbEntry)) {
+               return "Book updated!";
+           } else {
+               return "Book with a " + field + " like that not updated";
+           }
+       } else {
+           return "Please provide only <ISBN> <field_to_update> <updated_data>";
+       }
 
     }
 
+    //handle deleting an item - checking that the correct style & qty of info has been provided
     public String handleDelete(List<String> dbEntry) {
-        //validate length & all digits
-        String isbn = dbEntry.get(1);
-        if (bs.deleteBook(dbEntry)) {
-            return "Book deleted!";
+        if(correctNumTermsIncluded(dbEntry)){
+            String isbn = dbEntry.get(1);
+            if(checkOnlyDigitsISBN(isbn)){
+               if(!bs.checkNotDuplicateISBN(isbn)){
+                   if (bs.deleteBook(dbEntry)) {
+                       return "Book deleted!";
+                   } else {
+                       return "Book with ISBN: " + isbn + " not found or deleted.";
+                   }
+               } else {
+                   return "Book with that ISBN does not exist to delete.";
+               }
+            } else {
+                return "Please provide ISBN (numerical only) of book to be deleted.";
+            }
         } else {
-            return "Book with ISBN: " + isbn + " not found or deleted.";
+            return "Please provide only ISBN number of item for deletion.";
         }
-
     }
 
     //Clean any underscores out from provided info and replace with spaces
@@ -109,41 +130,26 @@ public class BookController
         return cleanedDetails;
     }
 
-    //check if the data provided contains all info for creating a new Book object
-    private boolean areNewBookDetailsIncluded(List<String> dbEntry){
-        if(dbEntry.size() == 7){
+
+  //check if the data provided for search list is right length
+    private boolean correctNumTermsIncluded(List<String> dbEntry){
+        if((dbEntry.size() == 2 &&
+            dbEntry.get(0).equalsIgnoreCase("search")) ||
+            (dbEntry.size() == 4 &&
+            dbEntry.get(0).equalsIgnoreCase("update")) ||
+            (dbEntry.size() == 2 &&
+            dbEntry.get(0).equalsIgnoreCase("delete")) ||
+            (dbEntry.size() == 7 &&
+            dbEntry.get(0).equalsIgnoreCase("add"))
+        ) {
             return true;
         }
         return false;
-    }
-
-    //check if the data provided matches the pattern for creating a new Book object
-    private boolean isNewBook(List<String> dbEntry){
-        if(dbEntry.get(0).equalsIgnoreCase("add")){
-            return true;
-        }
-        return false;
-    }
-
-    //check if the data provided includes word "search"
-    private boolean isSearchTermIncluded(List<String> dbEntry){
-        if(dbEntry.get(0).equalsIgnoreCase("search")){
-            return true;
-        }
-        return false;
-    }
-
-    //check if the data provided for search list is right length
-    private boolean isSearchListTooLong(List<String> dbEntry){
-        if(dbEntry.size() == 2){
-            return false;
-        }
-        return true;
     }
 
     //checks that ISBN provided contains only numbers
-    public boolean checkOnlyDigitsISBN(Book book){
-        if(book.getIsbn().matches("[0-9]+")){
+    public boolean checkOnlyDigitsISBN(String isbn){
+        if(isbn.matches("[0-9]+")){
             return true;
         } else {
             return false;

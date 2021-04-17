@@ -1,5 +1,8 @@
 public class Book
 {
+    //nb isbn and price are stored as strings because doubles and floats have maths and display quirks,
+    //so can be stored as strings and converted as needed
+
     private String isbn;
     private String author;
     private String publisher;

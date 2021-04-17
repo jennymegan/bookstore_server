@@ -26,7 +26,7 @@ public class Main {
                         //instantiate a bookcontroller to deal with client input
                         BookController bc = new BookController();
 
-                        //hand the book controller handle input method the scanner input
+                        //hand the book controller handle-input method the scanner input
                         //it returns a string, so send this string back to the client in response.
                         out.println(bc.handleInput(in));
 
