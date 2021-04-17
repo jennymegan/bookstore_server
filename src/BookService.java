@@ -8,27 +8,13 @@ public class BookService {
 
     //Create a new book object from a list of data and return it
     public Book createNewBook(List<String> bookDetails) {
-        List<String> cleanBookDetails = cleanUnderscores(bookDetails);
-        String book_ISBN = cleanBookDetails.get(1);
-        String book_author = cleanBookDetails.get(2);
-        String book_publisher = cleanBookDetails.get(3);
-        String book_title = cleanBookDetails.get(4);
-        String book_language = cleanBookDetails.get(5);
-        String book_price_gbp = cleanBookDetails.get(6);
+        String book_ISBN = bookDetails.get(1);
+        String book_author = bookDetails.get(2);
+        String book_publisher = bookDetails.get(3);
+        String book_title = bookDetails.get(4);
+        String book_language = bookDetails.get(5);
+        String book_price_gbp = bookDetails.get(6);
         return new Book(book_ISBN, book_author, book_publisher, book_title, book_language, book_price_gbp);
-    }
-
-    //Clean any underscores out from provided info and replace with spaces
-    private List<String> cleanUnderscores(List<String> bookDetails){
-        List<String> cleanedDetails = new ArrayList<String>();
-        for (String detail : bookDetails){
-            if(detail.contains("_")){
-                cleanedDetails.add(detail.replaceAll("_", " "));
-            } else {
-                cleanedDetails.add(detail);
-            }
-        }
-        return cleanedDetails;
     }
 
     //checks whether a book with this ISBN already exists in database
@@ -87,6 +73,43 @@ public class BookService {
                     "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
                     "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
             statement.execute(insert);
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //Update a Book object in the database
+    public boolean updateBook(List<String> bookDetails) {
+        try {
+            Statement statement = BookstoreDBConnector.connect().createStatement();
+            String field = bookDetails.get(2);
+            if(field.contains("title")){
+                field = "book_title";
+            } else if(field.contains("price")){
+                field = "book_price_gbp";
+            }
+            String isbn = bookDetails.get(1);
+            String updateToMake = bookDetails.get(3);
+            String update = "UPDATE online_bookstore.book SET " + field + " = '" + updateToMake + "' WHERE book_ISBN LIKE '" + isbn + "';";
+            statement.execute(update);
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //Delete a Book object in the database
+    public boolean deleteBook(List<String> bookDetails) {
+        try {
+            Statement statement = BookstoreDBConnector.connect().createStatement();
+            String isbn = bookDetails.get(1);
+            String delete = "DELETE FROM online_bookstore.book WHERE book_ISBN = '" + isbn + "';";
+            statement.execute(delete);
             return true;
 
         } catch (SQLException e) {

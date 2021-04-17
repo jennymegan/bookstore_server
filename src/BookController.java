@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -10,53 +11,102 @@ public class BookController
         this.bs = new BookService();
     }
 
-    public String handleInput(Scanner in){
+    public String handleInput(Scanner in) {
 
         String input = in.nextLine();
         String[] data = input.split(" ");
-        List<String> dbEntry = Arrays.asList(data);
+        List<String> dbEntryRaw = Arrays.asList(data);
+        List<String> dbEntry = cleanUnderscores(dbEntryRaw);
+        String type = dbEntry.get(0).toLowerCase();
 
-        //check if it's an addition to the database & if so, add it and return info to client
-        if(isNewBook(dbEntry)){
-            if(areNewBookDetailsIncluded(dbEntry)){
-                Book bookToAdd = bs.createNewBook(dbEntry);
-                if(bs.checkNotDuplicateISBN(bookToAdd)){
-                    if(checkOnlyDigitsISBN(bookToAdd)){
-                        if(checkOnlyDigitsPrice(bookToAdd)){
-                            if(bs.addNewBookToDb(bookToAdd)){
-                                return "Book added - " + bookToAdd.printInfo();
-                            } else {
-                                return "Book failed to add to database.";
-                            }
+        switch (type) {
+            case "add":
+                return handleAdd(dbEntry);
+            case "search":
+                return handleSearch(dbEntry);
+            case "update":
+                return handleUpdate(dbEntry);
+            case "delete":
+                return handleDelete(dbEntry);
+        }
+
+        return "Please try again, entering your query type as the first word.";
+    }
+
+
+    public String handleAdd( List<String> dbEntry) {
+        if (areNewBookDetailsIncluded(dbEntry)) {
+            Book bookToAdd = bs.createNewBook(dbEntry);
+            if (bs.checkNotDuplicateISBN(bookToAdd)) {
+                if (checkOnlyDigitsISBN(bookToAdd)) {
+                    if (checkOnlyDigitsPrice(bookToAdd)) {
+                        if (bs.addNewBookToDb(bookToAdd)) {
+                            return "Book added - " + bookToAdd.printInfo();
                         } else {
-                            return "Price should be formatted with two decimal places.";
+                            return "Book failed to add to database.";
                         }
                     } else {
-                        return "ISBN can contain only numerical digits.";
+                        return "Price should be formatted with two decimal places.";
                     }
                 } else {
-                    return "Book with this ISBN already in database.";
+                    return "ISBN can contain only numerical digits.";
                 }
             } else {
-                return "Addition to database should have six fields. For a field with more than one word, separate words with underscores, like_this.";
+                return "Book with this ISBN already in database.";
             }
-
-            //check if it's a search query, if so search and return info to client
-        } else if (isSearchTermIncluded(dbEntry)) {
-            if(isSearchListTooLong(dbEntry)){
-                return "For a book name with more than one word, separate words with underscores, like_this.";
-            } else {
-                Book foundBook = bs.searchBookTitle(dbEntry);
-                if (foundBook.getIsbn() == null) {
-                    return "No book found with a title like that.";
-                } else {
-                    return "Book found - " + foundBook.printInfo();
-                }
-            }
-
         } else {
-            return "Incorrect formatting of request. Please try again, following the format requested, ie:  SEARCH <bookName> or ADD <ISBN> <author> <publisher> <title> <language> <priceInGBP> ";
+            return "Addition to database should have six fields. For a field with more than one word, separate words with underscores, like_this.";
         }
+    }
+
+    public String handleSearch(List<String> dbEntry) {
+        if(isSearchListTooLong(dbEntry)){
+            return "For a book name with more than one word, separate words with underscores, like_this.";
+        } else {
+            Book foundBook = bs.searchBookTitle(dbEntry);
+            if (foundBook.getIsbn() == null) {
+                return "No book found with a title like that.";
+            } else {
+                return "Book found - " + foundBook.printInfo();
+            }
+        }
+
+    }
+
+
+    public String handleUpdate(List<String> dbEntry) {
+       //validate length?
+        String field = dbEntry.get(1);
+        if (bs.updateBook(dbEntry)) {
+            return "Book updated!";
+        } else {
+            return "Book with a " + field + " like that not updated";
+        }
+
+    }
+
+    public String handleDelete(List<String> dbEntry) {
+        //validate length & all digits
+        String isbn = dbEntry.get(1);
+        if (bs.deleteBook(dbEntry)) {
+            return "Book deleted!";
+        } else {
+            return "Book with ISBN: " + isbn + " not found or deleted.";
+        }
+
+    }
+
+    //Clean any underscores out from provided info and replace with spaces
+    private List<String> cleanUnderscores(List<String> bookDetails){
+        List<String> cleanedDetails = new ArrayList<String>();
+        for (String detail : bookDetails){
+            if(detail.contains("_")){
+                cleanedDetails.add(detail.replaceAll("_", " "));
+            } else {
+                cleanedDetails.add(detail);
+            }
+        }
+        return cleanedDetails;
     }
 
     //check if the data provided contains all info for creating a new Book object
