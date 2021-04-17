@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class BookService {
         String book_title = cleanBookDetails.get(4);
         String book_language = cleanBookDetails.get(5);
         String book_price_gbp = cleanBookDetails.get(6);
-        return new Book(Double.parseDouble(book_ISBN), book_author, book_publisher, book_title, book_language, Double.parseDouble(book_price_gbp));
+        return new Book(book_ISBN, book_author, book_publisher, book_title, book_language, book_price_gbp);
     }
 
     private List<String> cleanUnderscores(List<String> bookDetails){
@@ -26,8 +27,25 @@ public class BookService {
                 cleanedDetails.add(detail);
             }
         }
-        System.out.println(cleanedDetails.toString());
         return cleanedDetails;
+    }
+
+    //checks that ISBN provided contains only numbers
+    public boolean checkOnlyDigitsISBN(Book book){
+       if(book.getIsbn().matches("[0-9]+")){
+           return true;
+       } else {
+           return false;
+       }
+    }
+
+    //checks that price provided contains only numbers
+    public boolean checkOnlyDigitsPrice(Book book){
+        if(book.getPrice().matches("\\d+\\.\\d{1,2}")){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //checks whether a book with this ISBN already exists
@@ -77,12 +95,12 @@ public class BookService {
             Book foundBook = new Book();
 
             while (rs.next()) {
-                foundBook.setIsbn(Double.parseDouble(rs.getString("book_ISBN")));
+                foundBook.setIsbn(rs.getString("book_ISBN"));
                 foundBook.setAuthor(rs.getString("book_author"));
                 foundBook.setPublisher(rs.getString("book_publisher"));
                 foundBook.setTitle(rs.getString("book_title"));
                 foundBook.setLanguage(rs.getString("book_language"));
-                foundBook.setPrice(Double.parseDouble(rs.getString("book_price_gbp")));
+                foundBook.setPrice(rs.getString("book_price_gbp"));
                 return foundBook;
 
                 }

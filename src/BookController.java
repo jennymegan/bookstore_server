@@ -21,10 +21,18 @@ public class BookController
             if(areNewBookDetailsIncluded(dbEntry)){
                 Book bookToAdd = bs.createNewBook(dbEntry);
                 if(bs.checkNotDuplicateISBN(bookToAdd)){
-                    if(bs.addNewBookToDb(bookToAdd)){
-                        return "Book added - " + bookToAdd.printInfo();
+                    if(bs.checkOnlyDigitsISBN(bookToAdd)){
+                        if(bs.checkOnlyDigitsPrice(bookToAdd)){
+                            if(bs.addNewBookToDb(bookToAdd)){
+                                return "Book added - " + bookToAdd.printInfo();
+                            } else {
+                                return "Book failed to add to database.";
+                            }
+                        } else {
+                            return "Price should be formatted with two decimal places.";
+                        }
                     } else {
-                        return "Book failed to add to database.";
+                        return "ISBN can contain only numerical digits.";
                     }
                 } else {
                     return "Book with this ISBN already in database.";

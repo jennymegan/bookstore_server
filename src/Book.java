@@ -1,13 +1,13 @@
 public class Book
 {
-    private Double isbn;
+    private String isbn;
     private String author;
     private String publisher;
     private String title;
     private String language;
-    private Double price;
+    private String price;
 
-    public Book(Double isbn, String author, String publisher, String title, String language, Double price) {
+    public Book(String isbn, String author, String publisher, String title, String language, String price) {
         this.isbn = isbn;
         this.author = author;
         this.publisher = publisher;
@@ -23,11 +23,11 @@ public class Book
         return "ISBN: " + this.isbn + ", Author: " + this.author + ", Publisher: " + this.publisher + ", Title: " + this.title + ", Language: " + this.language + ", Price: £" + this.price;
     }
 
-    public Double getIsbn() {
+    public String getIsbn() {
         return isbn;
     }
 
-    public void setIsbn(Double isbn) {
+    public void setIsbn(String isbn) {
         this.isbn = isbn;
     }
 
@@ -63,11 +63,11 @@ public class Book
         this.language = language;
     }
 
-    public Double getPrice() {
+    public String getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(String price) {
         this.price = price;
     }
 }
