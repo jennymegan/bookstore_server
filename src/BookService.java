@@ -1,43 +1,13 @@
 import java.sql.ResultSet;
 import java.sql.*;
-import java.util.List;
 
 public class BookService {
 
-    //Create a new book object from a list of data and return it
-    public Book createNewBook(List<String> bookDetails) {
-        String book_ISBN = bookDetails.get(1);
-        String book_author = bookDetails.get(2);
-        String book_publisher = bookDetails.get(3);
-        String book_title = bookDetails.get(4);
-        String book_language = bookDetails.get(5);
-        String book_price_gbp = bookDetails.get(6);
-        return new Book(book_ISBN, book_author, book_publisher, book_title, book_language, book_price_gbp);
-    }
-
-    //checks whether a book with this ISBN already exists in database
-    public boolean checkNotDuplicateISBN(String isbn){
-        try {
-            Statement statement = BookstoreDBConnector.connect().createStatement();
-            String select = "SELECT * FROM online_bookstore.book WHERE BOOK_isbn LIKE '" + isbn + "';";
-            ResultSet rs = statement.executeQuery(select);
-
-            if (!rs.isBeforeFirst() ) {
-                return true;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     //Search for a title in the book table in database based on list of data
-    public Book searchBookTitle(List<String> bookDetails) {
+    public Book searchBookTitle(Book book) {
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            String bookName = bookDetails.get(1);
-            String select = "SELECT * FROM online_bookstore.book WHERE book_title LIKE '%" + bookName + "%';";
+            String select = "SELECT * FROM online_bookstore.book WHERE book_title LIKE '%" + book.getTitle() + "%';";
             ResultSet rs = statement.executeQuery(select);
             Book foundBook = new Book();
 
@@ -49,12 +19,10 @@ public class BookService {
                 foundBook.setLanguage(rs.getString("book_language"));
                 foundBook.setPrice(rs.getString("book_price_gbp"));
                 return foundBook;
-
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-
         }
         return new Book();
     }
@@ -80,19 +48,31 @@ public class BookService {
     }
 
     //Update a Book object in the database
-    public boolean updateBook(List<String> bookDetails) {
+    public boolean updateBook(Book book) {
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            String field = bookDetails.get(2);
-            if(field.contains("title")){
-                field = "book_title";
-            } else if(field.contains("price")){
-                field = "book_price_gbp";
+            if(book.getTitle() != null){
+                String update = "UPDATE online_bookstore.book SET book_title = '" + book.getTitle() + "' WHERE book_ISBN LIKE '" + book.getIsbn() + "';";
+                statement.execute(update);
+                return true;
+            } else if(book.getPrice() != null){
+                String update = "UPDATE online_bookstore.book SET book_price_gbp = '" + book.getPrice() + "' WHERE book_ISBN LIKE '" + book.getIsbn() + "';";
+                statement.execute(update);
+                return true;
             }
-            String isbn = bookDetails.get(1);
-            String updateToMake = bookDetails.get(3);
-            String update = "UPDATE online_bookstore.book SET " + field + " = '" + updateToMake + "' WHERE book_ISBN LIKE '" + isbn + "';";
-            statement.execute(update);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    //Delete a Book object in the database
+    public boolean deleteBook(Book book) {
+        try {
+            Statement statement = BookstoreDBConnector.connect().createStatement();
+            String delete = "DELETE FROM online_bookstore.book WHERE book_ISBN = '" + book.getIsbn() + "';";
+            statement.execute(delete);
             return true;
 
         } catch (SQLException e) {
@@ -101,19 +81,21 @@ public class BookService {
         }
     }
 
-    //Delete a Book object in the database
-    public boolean deleteBook(List<String> bookDetails) {
+    //checks whether a book with this ISBN already exists in database
+    public boolean checkNotDuplicateBook(Book book){
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
-            String isbn = bookDetails.get(1);
-            String delete = "DELETE FROM online_bookstore.book WHERE book_ISBN = '" + isbn + "';";
-            statement.execute(delete);
-            return true;
+            String select = "SELECT * FROM online_bookstore.book WHERE BOOK_isbn LIKE '" + book.getIsbn() + "';";
+            ResultSet rs = statement.executeQuery(select);
+
+            if (!rs.isBeforeFirst() ) {
+                return true;
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return false;
     }
 
 }

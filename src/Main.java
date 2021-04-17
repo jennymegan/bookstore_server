@@ -24,7 +24,7 @@ public class Main {
                         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
                         //instantiate a bookcontroller to deal with client input
-                        BookController bc = new BookController();
+                        BookstoreController bc = new BookstoreController();
 
                         //hand the book controller handle-input method the scanner input
                         //it returns a string, so send this string back to the client in response.
