@@ -18,6 +18,7 @@ public class BookService {
         return new Book(book_ISBN, book_author, book_publisher, book_title, book_language, book_price_gbp);
     }
 
+    //Clean any underscores out from provided info and replace with spaces
     private List<String> cleanUnderscores(List<String> bookDetails){
         List<String> cleanedDetails = new ArrayList<String>();
         for (String detail : bookDetails){
@@ -30,25 +31,7 @@ public class BookService {
         return cleanedDetails;
     }
 
-    //checks that ISBN provided contains only numbers
-    public boolean checkOnlyDigitsISBN(Book book){
-       if(book.getIsbn().matches("[0-9]+")){
-           return true;
-       } else {
-           return false;
-       }
-    }
-
-    //checks that price provided contains only numbers
-    public boolean checkOnlyDigitsPrice(Book book){
-        if(book.getPrice().matches("\\d+\\.\\d{1,2}")){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    //checks whether a book with this ISBN already exists
+    //checks whether a book with this ISBN already exists in database
     public boolean checkNotDuplicateISBN(Book book){
         try {
             Statement statement = BookstoreDBConnector.connect().createStatement();
@@ -58,26 +41,6 @@ public class BookService {
             if (!rs.isBeforeFirst() ) {
                 return true;
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    //Add a Book object to the database
-    public boolean addNewBookToDb(Book book) {
-        try {
-            Statement statement = BookstoreDBConnector.connect().createStatement();
-
-            String insert = "INSERT INTO `online_bookstore`.`book`" +
-                    "(`book_ISBN`," +
-                    "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
-                    "VALUES" +
-                    "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
-                    "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
-            statement.execute(insert);
-            return true;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -103,13 +66,33 @@ public class BookService {
                 foundBook.setPrice(rs.getString("book_price_gbp"));
                 return foundBook;
 
-                }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-
             }
-            return new Book();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
         }
+        return new Book();
+    }
+
+    //Add a Book object to the database
+    public boolean addNewBookToDb(Book book) {
+        try {
+            Statement statement = BookstoreDBConnector.connect().createStatement();
+
+            String insert = "INSERT INTO `online_bookstore`.`book`" +
+                    "(`book_ISBN`," +
+                    "`book_author`, `book_publisher`, `book_title`, `book_language`, `book_price_gbp`)" +
+                    "VALUES" +
+                    "('" + book.getIsbn() + "','" + book.getAuthor() + "', '" + book.getPublisher() + "', '" + book.getTitle() + "" +
+                    "', '" + book.getLanguage() + "', '" + book.getPrice() + "');";
+            statement.execute(insert);
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }

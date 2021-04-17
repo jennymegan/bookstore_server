@@ -21,8 +21,8 @@ public class BookController
             if(areNewBookDetailsIncluded(dbEntry)){
                 Book bookToAdd = bs.createNewBook(dbEntry);
                 if(bs.checkNotDuplicateISBN(bookToAdd)){
-                    if(bs.checkOnlyDigitsISBN(bookToAdd)){
-                        if(bs.checkOnlyDigitsPrice(bookToAdd)){
+                    if(checkOnlyDigitsISBN(bookToAdd)){
+                        if(checkOnlyDigitsPrice(bookToAdd)){
                             if(bs.addNewBookToDb(bookToAdd)){
                                 return "Book added - " + bookToAdd.printInfo();
                             } else {
@@ -90,4 +90,23 @@ public class BookController
         }
         return true;
     }
+
+    //checks that ISBN provided contains only numbers
+    public boolean checkOnlyDigitsISBN(Book book){
+        if(book.getIsbn().matches("[0-9]+")){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //checks that price provided contains only numbers
+    public boolean checkOnlyDigitsPrice(Book book){
+        if(book.getPrice().matches("\\d+\\.\\d{1,2}")){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }
